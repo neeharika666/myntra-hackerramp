@@ -13,6 +13,7 @@ export const getCart = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await cartAPI.getCart();
+      console.log("response.data.cart", response.data.cart);
       return response.data.cart;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to get cart');
@@ -25,6 +26,7 @@ export const addToCart = createAsyncThunk(
   async (itemData, { rejectWithValue }) => {
     try {
       const response = await cartAPI.addToCart(itemData);
+      console.log("response.data.cart", response.data.cart);
       return response.data.cart;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to add to cart');

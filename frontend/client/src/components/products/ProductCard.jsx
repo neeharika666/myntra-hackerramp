@@ -113,7 +113,7 @@ const ProductCard = ({ product }) => {
           quantity: 1,
         })
       ).unwrap();
-  
+      
       toast.success('Added to cart');
     } catch (error) {
       toast.error(error || 'Failed to add to cart');

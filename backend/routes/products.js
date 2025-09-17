@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
     // Fetch all products that are active
     const products = await Product.find({})
       
-      console.log(products)
+      // console.log(products)
     res.json({ products, totalProducts: products.length });
   } catch (error) {
     console.error('Get all products error:', error);

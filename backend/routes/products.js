@@ -3,115 +3,37 @@ const { body, query, validationResult } = require('express-validator');
 const Product = require('../models/Product.js');
 const Category = require('../models/Category.js');
 const { optionalAuth } = require('../middleware/auth.js');
+const mongoose = require('mongoose');
+
+// const router = express.Router();
+
+// @route   GET /api/products
+// // @desc    Get all products with filtering, sorting, and pagination
+// // @access  Public
+// import express from 'express';
+// import { query, validationResult } from 'express-validator';
+// import mongoose from 'mongoose';
+// import Product from '../models/Product.js';
+// import optionalAuth from '../middlewares/optionalAuth.js';
 
 const router = express.Router();
 
-// @route   GET /api/products
-// @desc    Get all products with filtering, sorting, and pagination
-// @access  Public
-router.get('/', [
-  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
-  query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50'),
-  query('sort').optional().isIn(['price_asc', 'price_desc', 'rating', 'newest', 'popular']).withMessage('Invalid sort option'),
-  query('minPrice').optional().isFloat({ min: 0 }).withMessage('Min price must be non-negative'),
-  query('maxPrice').optional().isFloat({ min: 0 }).withMessage('Max price must be non-negative')
-], optionalAuth, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const {
-      page = 1,
-      limit = 20,
-      category,
-      subcategory,
-      brand,
-      search,
-      minPrice,
-      maxPrice,
-      size,
-      color,
-      sort = 'newest',
-      inStock = 'true'
-    } = req.query;
-
-    // Build filter object
-    const filter = { isActive: true };
-
-    if (category) filter.category = category;
-    if (subcategory) filter.subcategory = subcategory;
-    if (brand) filter.brand = new RegExp(brand, 'i');
-    if (search) {
-      filter.$text = { $search: search };
-    }
-    if (minPrice || maxPrice) {
-      filter['variants.price'] = {};
-      if (minPrice) filter['variants.price'].$gte = parseFloat(minPrice);
-      if (maxPrice) filter['variants.price'].$lte = parseFloat(maxPrice);
-    }
-    if (size) filter['variants.size'] = size;
-    if (color) filter['variants.color'] = new RegExp(color, 'i');
-    if (inStock === 'true') filter['variants.stock'] = { $gt: 0 };
-
-    // Build sort object
-    let sortObj = {};
-    switch (sort) {
-      case 'price_asc':
-        sortObj = { 'variants.price': 1 };
-        break;
-      case 'price_desc':
-        sortObj = { 'variants.price': -1 };
-        break;
-      case 'rating':
-        sortObj = { 'rating.average': -1 };
-        break;
-      case 'popular':
-        sortObj = { sales: -1 };
-        break;
-      case 'newest':
-      default:
-        sortObj = { createdAt: -1 };
-        break;
-    }
-
-    // Execute query with pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-    const products = await Product.find(filter)
-      .populate('category', 'name slug')
-      .sort(sortObj)
-      .skip(skip)
-      .limit(parseInt(limit))
-      .lean();
-
-    // Get total count for pagination
-    const total = await Product.countDocuments(filter);
-
-    // Increment view count for each product
-    if (products.length > 0) {
-      const productIds = products.map(p => p._id);
-      await Product.updateMany(
-        { _id: { $in: productIds } },
-        { $inc: { views: 1 } }
-      );
-    }
-
-    res.json({
-      products,
-      pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(total / parseInt(limit)),
-        totalProducts: total,
-        hasNext: skip + products.length < total,
-        hasPrev: parseInt(page) > 1
-      }
-    });
+    // Fetch all products that are active
+    const products = await Product.find({})
+      
+      console.log(products)
+    res.json({ products, totalProducts: products.length });
   } catch (error) {
-    console.error('Get products error:', error);
+    console.error('Get all products error:', error);
     res.status(500).json({ message: 'Server error while fetching products' });
   }
 });
+
+
+// export default router;;
+
 
 // @route   GET /api/products/:id
 // @desc    Get single product by ID
@@ -120,7 +42,6 @@ router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
       .populate('category', 'name slug')
-      .populate('reviews.user', 'name')
       .lean();
 
     if (!product || !product.isActive) {

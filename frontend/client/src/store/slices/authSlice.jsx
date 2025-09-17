@@ -1,8 +1,17 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authAPI } from '../../services/api';
+import { getWishlist } from './wishlistSlice';
+
+const persistedUserRaw = localStorage.getItem('user');
+let persistedUser = null;
+try {
+  persistedUser = persistedUserRaw ? JSON.parse(persistedUserRaw) : null;
+} catch (_) {
+  persistedUser = null;
+}
 
 const initialState = {
-  user: null,
+  user: persistedUser,
   token: localStorage.getItem('token'),
   isAuthenticated: !!localStorage.getItem('token'),
   loading: false,
@@ -72,6 +81,24 @@ export const addAddress = createAsyncThunk(
   }
 );
 
+export const loadUserData = createAsyncThunk(
+  'auth/loadUserData',
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      // Load current user
+      const userResponse = await authAPI.getCurrentUser();
+      const user = userResponse.data.user;
+      
+      // Load wishlist
+      await dispatch(getWishlist());
+      
+      return user;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to load user data');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -82,6 +109,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
     clearError: (state) => {
       state.error = null;
@@ -89,6 +117,7 @@ const authSlice = createSlice({
     setUser: (state, action) => {
       state.user = action.payload;
       state.isAuthenticated = true;
+      try { localStorage.setItem('user', JSON.stringify(state.user)); } catch (_) {}
     },
   },
   extraReducers: (builder) => {
@@ -104,6 +133,7 @@ const authSlice = createSlice({
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.error = null;
+        try { localStorage.setItem('user', JSON.stringify(state.user)); } catch (_) {}
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -120,6 +150,7 @@ const authSlice = createSlice({
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.error = null;
+        try { localStorage.setItem('user', JSON.stringify(state.user)); } catch (_) {}
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
@@ -133,6 +164,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload;
         state.isAuthenticated = true;
+        try { localStorage.setItem('user', JSON.stringify(state.user)); } catch (_) {}
       })
       .addCase(getCurrentUser.rejected, (state) => {
         state.loading = false;
@@ -149,6 +181,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload;
         state.error = null;
+        try { localStorage.setItem('user', JSON.stringify(state.user)); } catch (_) {}
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
@@ -165,6 +198,21 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(addAddress.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Load user data
+      .addCase(loadUserData.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(loadUserData.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        state.error = null;
+        try { localStorage.setItem('user', JSON.stringify(state.user)); } catch (_) {}
+      })
+      .addCase(loadUserData.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

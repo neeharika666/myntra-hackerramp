@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5003/api';
 
 // Create axios instance
 const api = axios.create({
@@ -51,7 +51,14 @@ export const authAPI = {
 
 // Products API
 export const productsAPI = {
-  getProducts: (params) => api.get('/products', { params }),
+  // getProducts: (params) => api.get('/products', { params }),
+  getProducts: async (params) => {
+    console.log("Fetching products with params:", params);
+    const res = await api.get("/products", { params });
+    console.log("Fetched products response:", res.data.products);
+    return res;
+  },
+  
   
   getProduct: (id) => api.get(`/products/${id}`),
   
@@ -86,7 +93,13 @@ export const cartAPI = {
 
 // Wishlist API
 export const wishlistAPI = {
-  getWishlist: () => api.get('/wishlist'),
+  // getWishlist: () => api.get('/wishlist',),
+   getWishlist :() => {
+    const userData = localStorage.getItem('userData'); // JSON string
+    const parsedData = JSON.parse(userData); // convert to object
+    console.log(1);
+    return api.get('/wishlist/wishlist', { userId: parsedData.id });
+  },  
   addToWishlist: (productId) => api.post('/wishlist/add', { productId }),
   removeFromWishlist: (productId) => api.delete('/wishlist/remove', { data: { productId } }),
   clearWishlist: () => api.delete('/wishlist/clear'),

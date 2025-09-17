@@ -8,11 +8,31 @@ const router = express.Router();
 
 // @route   GET /api/wishlist
 // @desc    Get user's wishlist
+router.get('/wishlist', async (req, res) => {
+  try {
+    
+    const wishlist = await Wishlist.findOne({ user: req.user.id })
+      .populate({
+        path: 'items.product',
+        populate: { path: 'reviews.user', strictPopulate: false },
+      })
+      .lean();
+    if (!wishlist) {
+      return res.json({ wishlist: [] });
+    }
+
+    res.json({ wishlist });
+  } catch (err) {
+    console.error('Get wishlist error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // @access  Private
 router.get('/', authenticateToken, async (req, res) => {
   try {
     let wishlist = await Wishlist.findOne({ user: req.user._id })
-      .populate('items.product', 'name brand images variants rating');
+      .populate('items.product', 'title product_id images variations rating initial_price final_price seller_name');
 
     if (!wishlist) {
       wishlist = new Wishlist({ user: req.user._id, items: [] });
@@ -67,7 +87,7 @@ router.post('/add', authenticateToken, [
 
     // Add item to wishlist
     await wishlist.addItem(productId);
-    await wishlist.populate('items.product', 'name brand images variants rating');
+    await wishlist.populate('items.product', 'title product_id images variations rating initial_price final_price seller_name');
 
     res.json({
       message: 'Item added to wishlist successfully',
@@ -99,7 +119,7 @@ router.delete('/remove', authenticateToken, [
     }
 
     await wishlist.removeItem(productId);
-    await wishlist.populate('items.product', 'name brand images variants rating');
+    await wishlist.populate('items.product', 'title product_id images variations rating initial_price final_price seller_name');
 
     res.json({
       message: 'Item removed from wishlist successfully',

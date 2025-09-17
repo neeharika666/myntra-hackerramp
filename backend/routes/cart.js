@@ -24,7 +24,10 @@ router.get('/', authenticateToken, async (req, res) => {
     for (const item of cart.items) {
       const product = await Product.findById(item.product._id);
       if (product && product.isActive) {
-        const variant = product.variants.find(
+        const variantList = Array.isArray(product.variants) && product.variants.length
+          ? product.variants
+          : (Array.isArray(product.variations) ? product.variations : []);
+        const variant = variantList.find(
           v => v.size === item.variant.size && v.color === item.variant.color
         );
         if (variant && variant.stock > 0) {
@@ -72,7 +75,10 @@ router.post('/add', authenticateToken, [
     }
 
     // Check if variant exists and has stock
-    const productVariant = product.variants.find(
+    const variantList = Array.isArray(product.variants) && product.variants.length
+      ? product.variants
+      : (Array.isArray(product.variations) ? product.variations : []);
+    const productVariant = variantList.find(
       v => v.size === variant.size && v.color === variant.color
     );
 
@@ -96,7 +102,7 @@ router.post('/add', authenticateToken, [
     await cart.addItem(productId, variant, quantity, productVariant.price);
 
     // Populate the updated cart
-    await cart.populate('items.product', 'name brand images variants');
+    await cart.populate('items.product', 'name brand images variants variations');
 
     res.json({
       message: 'Item added to cart successfully',
@@ -140,7 +146,10 @@ router.put('/update', authenticateToken, [
         return res.status(404).json({ message: 'Product not found or unavailable' });
       }
 
-      const productVariant = product.variants.find(
+      const variantList = Array.isArray(product.variants) && product.variants.length
+        ? product.variants
+        : (Array.isArray(product.variations) ? product.variations : []);
+      const productVariant = variantList.find(
         v => v.size === variant.size && v.color === variant.color
       );
 
@@ -155,7 +164,7 @@ router.put('/update', authenticateToken, [
     }
 
     // Populate the updated cart
-    await cart.populate('items.product', 'name brand images variants');
+    await cart.populate('items.product', 'name brand images variants variations');
 
     res.json({
       message: 'Cart updated successfully',

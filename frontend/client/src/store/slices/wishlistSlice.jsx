@@ -2,7 +2,10 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { wishlistAPI } from '../../services/api';
 
 const initialState = {
-  wishlist: null,
+  wishlist: {
+    items: [],
+    totalItems: 0
+  },
   loading: false,
   error: null,
 };

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getCurrentUser } from './store/slices/authSlice.jsx';
+import { loadUserData } from './store/slices/authSlice.jsx';
 
 // Components
 import Header from './components/layout/Header.jsx';
@@ -35,7 +35,7 @@ function App() {
 
   useEffect(() => {
     if (token && !isAuthenticated) {
-      dispatch(getCurrentUser());
+      dispatch(loadUserData());
     }
   }, [dispatch, token, isAuthenticated]);
 

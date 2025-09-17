@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../store/slices/cartSlice.jsx';
 import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice.jsx';
 import toast from 'react-hot-toast';
+import './ProductDetail.css';
 
 const ProductDetail = () => {
   const { id } = useParams();

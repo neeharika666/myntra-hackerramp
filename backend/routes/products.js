@@ -40,20 +40,17 @@ router.get('/', async (req, res) => {
 // @access  Public
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
+    const id=req.params.id;
+    // console.log("hiiiiiiiiiiiiiiiiiii");
     const product = await Product.findById(req.params.id)
-      .populate('category', 'name slug')
-      .lean();
+      
 
-    if (!product || !product.isActive) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
+    
 
-    // Increment view count
-    await Product.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
 
     res.json({ product });
   } catch (error) {
-    console.error('Get product error:', error);
+    // console.error('Get product error:', error);
     res.status(500).json({ message: 'Server error while fetching product' });
   }
 });

@@ -44,6 +44,7 @@ app.use('/api/orders', require('./routes/orders.js'));
 app.use('/api/users', require('./routes/users.js'));
 app.use('/api/admin', require('./routes/admin.js'));
 
+
 // Serve static files from React app in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static('client/build'));

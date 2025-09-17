@@ -94,12 +94,34 @@ export const cartAPI = {
 // Wishlist API
 export const wishlistAPI = {
   // getWishlist: () => api.get('/wishlist',),
-   getWishlist :() => {
-    const userData = localStorage.getItem('userData'); // JSON string
-    const parsedData = JSON.parse(userData); // convert to object
-    console.log(1);
-    return api.get('/wishlist/wishlist', { userId: parsedData.id });
-  },  
+  getWishlist: async () => {
+    try {
+      const userData = localStorage.getItem('user'); 
+      if (!userData) {
+        console.error("No userData found in localStorage");
+        return;
+      }
+  
+      const parsedData = JSON.parse(userData);
+      if (!parsedData?.id) {
+        console.error("No user id in parsedData", parsedData);
+        return;
+      } 
+  
+      console.log("Calling API for user:", parsedData.id);
+  
+      const response = await api.get('/wishlist/wish', {
+        params: { userId: parsedData.id },
+      });
+  
+      console.log("Wishlist Response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching wishlist:", error);
+    }
+  }
+  
+  ,
   addToWishlist: (productId) => api.post('/wishlist/add', { productId }),
   removeFromWishlist: (productId) => api.delete('/wishlist/remove', { data: { productId } }),
   clearWishlist: () => api.delete('/wishlist/clear'),

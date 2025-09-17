@@ -16,7 +16,11 @@ export const getWishlist = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await wishlistAPI.getWishlist();
-      return response.data.wishlist;
+
+      console.log("response.data.wishlist", response.wishlist);
+      console.log("harika 2")
+
+      return response.wishlist;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to get wishlist');
     }

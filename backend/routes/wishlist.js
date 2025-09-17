@@ -8,10 +8,11 @@ const router = express.Router();
 
 // @route   GET /api/wishlist
 // @desc    Get user's wishlist
-router.get('/wishlist', async (req, res) => {
+router.get('/wish', async (req, res) => {
   try {
-    
-    const wishlist = await Wishlist.findOne({ user: req.user.id })
+    console.log(req);
+    // console.log(" ia  djnf");
+    const wishlist = await Wishlist.findOne({ user: req.query.userId })
       .populate({
         path: 'items.product',
         populate: { path: 'reviews.user', strictPopulate: false },
@@ -23,7 +24,7 @@ router.get('/wishlist', async (req, res) => {
 
     res.json({ wishlist });
   } catch (err) {
-    console.error('Get wishlist error:', err);
+    // console.error('Get wishlist error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

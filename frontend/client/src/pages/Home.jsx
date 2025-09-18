@@ -1,50 +1,71 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from 'react-query';
-import { productsAPI, categoriesAPI } from '../services/api.jsx';
-import ProductCard from '../components/products/ProductCard.jsx';
+import axios from 'axios';
 import CategoryCard from '../components/categories/CategoryCard.jsx';
+import ProductCard from '../components/products/ProductCard.jsx';
 import LoadingSpinner from '../components/common/LoadingSpinner.jsx';
+import { categoriesAPI, productsAPI } from '../services/api.jsx';
 import './Home.css';
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [trendingProducts, setTrendingProducts] = useState([]);
 
+  // =========================
   // Fetch categories
+  // =========================
   const { data: categoriesData, isLoading: categoriesLoading } = useQuery(
     'categories',
     () => categoriesAPI.getCategories(),
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }
+    { staleTime: 5 * 60 * 1000 }
   );
 
-  // Fetch featured products
-  const { isLoading: featuredLoading } = useQuery(
-    'featured-products',
-    () => productsAPI.getFeaturedProducts(8),
-    {
-      onSuccess: (response) => {
-        setFeaturedProducts(response.data.products);
+  // =========================
+  // Fetch featured products from recommendation API
+  // =========================
+  // const { data: featuredProducts, isLoading: featuredLoading } = useQuery(
+    const { isLoading: featuredLoading } = useQuery(
+      ['featured-recommendations', 'jeans'],
+      async () => {
+        const response = await axios.post('http://localhost:5003/api/recommend', {
+          keywords: ['top','kurti','sarees','sharara'],
+          top_n: 40,
+        });
+        console.log(response.data)
+        return response.data; // just return the data
       },
-      staleTime: 5 * 60 * 1000,
-    }
-  );
+      {
+        onSuccess: (data) => {
+          setFeaturedProducts(data); // update your local state here
+        },
+        staleTime: 5 * 60 * 1000, // cache for 5 minutes
+        onError: (error) => console.error('Error fetching featured products', error),
+      }
+    );
+  
 
+  // =========================
   // Fetch trending products
+  // =========================
   const { isLoading: trendingLoading } = useQuery(
     'trending-products',
     () => productsAPI.getTrendingProducts(8),
     {
-      onSuccess: (response) => {
-        setTrendingProducts(response.data.products);
-      },
+      onSuccess: (response) => setTrendingProducts(response.data.products),
       staleTime: 5 * 60 * 1000,
     }
   );
 
   const categories = categoriesData?.data.categories || [];
+
+  // Format price
+  const formatPrice = (price) =>
+    new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(price);
 
   return (
     <div className="home">
@@ -60,7 +81,7 @@ const Home = () => {
           </div>
           <div className="hero-image">
             <img
-              src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+              src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
               alt="Fashion Hero"
             />
           </div>
@@ -84,25 +105,59 @@ const Home = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="featured-section">
-        <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">Featured Products</h2>
-            <Link to="/products?featured=true" className="view-all-link">
-              View All
-            </Link>
-          </div>
-          {featuredLoading ? (
-            <LoadingSpinner />
-          ) : (
-            <div className="products-grid">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Featured Products */}
+<section className="featured-section">
+  <div className="container">
+    <div className="section-header">
+      <h2 className="section-title">Featured Products</h2>
+      <Link to="/products?featured=true" className="view-all-link">
+        View All
+      </Link>
+    </div>
+    {featuredLoading ? (
+      <LoadingSpinner />
+    ) : featuredProducts.length === 0 ? (
+      <p>No recommended products found.</p>
+    ) : (
+      <div className="products-grid">
+        {featuredProducts.map((product) => {
+          // Get primary image URL and handle relative paths
+          const primaryImage =
+            product.image_url?.startsWith('http')
+              ? product.image_url
+              : `http://localhost:5003${product.image_url}`;
+
+          // Calculate discount if needed
+          const discount =
+            product.initial_price && product.final_price
+              ? Math.round(
+                  ((product.initial_price - product.final_price) /
+                    product.initial_price) *
+                    100
+                )
+              : 0;
+
+          return (
+            <ProductCard
+              key={product._id}
+              product={{
+                ...product,
+                primaryImage,
+                discount,
+                prices: [product.final_price, product.initial_price],
+                lowestPrice: product.final_price,
+                highestPrice: product.initial_price,
+                variants: product.variants || [],
+                images: product.images || [{ url: primaryImage }],
+              }}
+            />
+          );
+        })}
+      </div>
+    )}
+  </div>
+</section>
+
 
       {/* Trending Products */}
       <section className="trending-section">
@@ -118,52 +173,16 @@ const Home = () => {
           ) : (
             <div className="products-grid">
               {trendingProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
+                <Link
+                  key={product._id}
+                  to={`/product/${product._id}`}
+                  className="product-link"
+                >
+                  <ProductCard product={product} />
+                </Link>
               ))}
             </div>
           )}
-        </div>
-      </section>
-
-      {/* Newsletter Section */}
-      <section className="newsletter-section">
-        <div className="container">
-          <div className="newsletter-content">
-            <h2>Stay Updated</h2>
-            <p>Subscribe to our newsletter for the latest fashion trends and exclusive offers</p>
-            <div className="newsletter-form">
-              <input type="email" placeholder="Enter your email address" />
-              <button className="btn btn-primary">Subscribe</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="features-section">
-        <div className="container">
-          <div className="features-grid">
-            <div className="feature">
-              <div className="feature-icon">🚚</div>
-              <h3>Free Shipping</h3>
-              <p>Free shipping on orders above ₹999</p>
-            </div>
-            <div className="feature">
-              <div className="feature-icon">↩️</div>
-              <h3>Easy Returns</h3>
-              <p>30-day return policy</p>
-            </div>
-            <div className="feature">
-              <div className="feature-icon">🔒</div>
-              <h3>Secure Payment</h3>
-              <p>100% secure payment options</p>
-            </div>
-            <div className="feature">
-              <div className="feature-icon">💬</div>
-              <h3>24/7 Support</h3>
-              <p>Round-the-clock customer support</p>
-            </div>
-          </div>
         </div>
       </section>
     </div>

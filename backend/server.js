@@ -43,6 +43,7 @@ app.use('/api/wishlist', require('./routes/wishlist.js'));
 app.use('/api/orders', require('./routes/orders.js'));
 app.use('/api/users', require('./routes/users.js'));
 app.use('/api/admin', require('./routes/admin.js'));
+app.use('/api/recommend', require('./ml/mlRoutes.js'));
 
 
 // Serve static files from React app in production

@@ -72,7 +72,7 @@ export const productsAPI = {
     api.get('/products/trending', { params: { limit } }),
   
   getFeaturedProducts: (limit) =>
-    api.get('/products/featured', { params: { limit } }),
+    api.get('/recommend/', { params: { limit } }),
 };
 
 // Categories API

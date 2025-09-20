@@ -49,11 +49,16 @@ const Home = () => {
   // Fetch trending products
   // =========================
   const { isLoading: trendingLoading } = useQuery(
-    'trending-products',
-    () => productsAPI.getTrendingProducts(8),
+    ['trending-products'],
+    async () => {
+      const response = await axios.post('http://localhost:5003/api/recommend/trending');
+      console.log(response)
+      return response.data;
+    },
     {
-      onSuccess: (response) => setTrendingProducts(response.data.products),
+      onSuccess: (data) => setTrendingProducts(data.results),
       staleTime: 5 * 60 * 1000,
+      onError: (error) => console.error('Error fetching trending products', error),
     }
   );
 

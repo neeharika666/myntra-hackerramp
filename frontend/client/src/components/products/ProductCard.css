@@ -1,3 +1,4 @@
+/* Base Product Card */
 .product-card {
   background: white;
   border-radius: 8px;
@@ -5,6 +6,13 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   position: relative;
+}
+
+/* Small variant */
+.product-card.small {
+  border-radius: 6px;
+  padding: 6px;
+  width: 150px; /* adjust as needed */
 }
 
 .product-card:hover {
@@ -25,6 +33,10 @@
   background: #f8f9fa;
 }
 
+.product-card.small .product-image-container {
+  aspect-ratio: 1; /* square for small cards */
+}
+
 .product-image {
   width: 100%;
   height: 100%;
@@ -36,6 +48,7 @@
   transform: scale(1.05);
 }
 
+/* Discount badge */
 .discount-badge {
   position: absolute;
   top: 12px;
@@ -49,59 +62,20 @@
   z-index: 2;
 }
 
-.product-actions {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  opacity: 0;
-  transform: translateX(10px);
-  transition: all 0.3s ease;
-  z-index: 2;
+.product-card.small .discount-badge {
+  top: 6px;
+  left: 6px;
+  padding: 2px 4px;
+  font-size: 10px;
 }
 
-.product-card:hover .product-actions {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.action-button {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  background: white;
-  color: #666;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
-  font-size: 16px;
-}
-
-.action-button:hover {
-  background: #ff3f6c;
-  color: white;
-  transform: scale(1.1);
-}
-
-.action-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.wishlist-button.active {
-  background: #ff3f6c;
-  color: white;
-}
-
+/* Product Info */
 .product-info {
   padding: 16px;
+}
+
+.product-card.small .product-info {
+  padding: 8px;
 }
 
 .product-brand {
@@ -110,6 +84,10 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 4px;
+}
+
+.product-card.small .product-brand {
+  font-size: 10px;
 }
 
 .product-name {
@@ -124,38 +102,15 @@
   overflow: hidden;
 }
 
-.product-rating {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.rating-stars {
-  display: flex;
-  gap: 2px;
-}
-
-.star {
+.product-card.small .product-name {
   font-size: 12px;
-  color: #ddd;
-  transition: color 0.2s ease;
-}
-
-.star.filled {
-  color: #ffc107;
-}
-
-.rating-count {
-  font-size: 12px;
-  color: #999;
+  margin-bottom: 4px;
 }
 
 .product-price {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
 }
 
 .current-price {
@@ -164,16 +119,25 @@
   color: #333;
 }
 
+.product-card.small .current-price {
+  font-size: 14px;
+}
+
 .original-price {
   font-size: 14px;
   color: #999;
   text-decoration: line-through;
 }
 
+.product-card.small .original-price {
+  font-size: 12px;
+}
+
+/* Product Colors */
 .product-colors {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .color-dot {
@@ -186,117 +150,20 @@
   transition: transform 0.2s ease;
 }
 
-.color-dot:hover {
-  transform: scale(1.2);
+.product-card.small .color-dot {
+  width: 12px;
+  height: 12px;
 }
 
-.more-colors {
-  font-size: 12px;
-  color: #999;
-  margin-left: 4px;
-}
-
-/* Responsive */
+/* Responsive Adjustments */
 @media (max-width: 768px) {
-  .product-actions {
-    opacity: 1;
-    transform: translateX(0);
-    flex-direction: row;
-    top: auto;
-    bottom: 12px;
-    right: 12px;
-  }
-  
-  .action-button {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-  }
-  
-  .product-info {
-    padding: 12px;
-  }
-  
-  .product-name {
-    font-size: 13px;
-  }
-  
-  .current-price {
-    font-size: 15px;
-  }
-  
-  .original-price {
-    font-size: 13px;
+  .product-card.small {
+    width: 120px;
   }
 }
 
 @media (max-width: 480px) {
-  .product-card {
-    border-radius: 6px;
-  }
-  
-  .product-image-container {
-    aspect-ratio: 0.8;
-  }
-  
-  .discount-badge {
-    top: 8px;
-    left: 8px;
-    padding: 3px 6px;
-    font-size: 11px;
-  }
-  
-  .product-actions {
-    bottom: 8px;
-    right: 8px;
-    gap: 6px;
-  }
-  
-  .action-button {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
-  }
-  
-  .product-info {
-    padding: 10px;
-  }
-  
-  .product-brand {
-    font-size: 11px;
-  }
-  
-  .product-name {
-    font-size: 12px;
-    margin-bottom: 6px;
-  }
-  
-  .product-rating {
-    margin-bottom: 6px;
-  }
-  
-  .star {
-    font-size: 11px;
-  }
-  
-  .rating-count {
-    font-size: 11px;
-  }
-  
-  .current-price {
-    font-size: 14px;
-  }
-  
-  .original-price {
-    font-size: 12px;
-  }
-  
-  .color-dot {
-    width: 14px;
-    height: 14px;
-  }
-  
-  .more-colors {
-    font-size: 11px;
+  .product-card.small {
+    width: 100px;
   }
 }

@@ -3,71 +3,59 @@
 import os
 import re
 import json
-from typing import Dict, Tuple, Optional, List
+from typing import Dict, Tuple, Optional
 from functools import lru_cache
 from flask import Flask, request, jsonify
 from pymongo import MongoClient
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-from flask_cors import CORS  # 
+from flask_cors import CORS
+
 # ==========================
-# ColorMapper
+# ColorMapper using Gemini ONLY
 # ==========================
 try:
     import google.generativeai as genai
     from google.generativeai.types import HarmCategory, HarmBlockThreshold
 except ImportError:
-    genai = None
+    raise ImportError("google.generativeai is required. Install with `pip install google-generativeai`")
 
 class ColorMapper:
-    """Color mapper using Gemini API for intelligent color standardization."""
-    def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+    """Color mapper using Gemini API only."""
+    def __init__(self, api_key: str):
+        if not api_key:
+            raise ValueError("Gemini API key is required!")
+        self.api_key = api_key
         self.model_name = "gemini-1.5-flash"
         self.model = None
-    
-        if genai and self.api_key:
-            try:
-                genai.configure(api_key=self.api_key)
-                self.model = genai.GenerativeModel(
-                    model_name=self.model_name,
-                    generation_config={
-                        "temperature": 0.1, "top_p": 0.9, "top_k": 40, "response_mime_type": "text/plain"
-                    },
-                    safety_settings={
-                        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-                        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-                        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-                        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-                    },
-                )
-            except Exception as e:
-                print(f"[WARN] Gemini init failed: {e}. Using fallback mapping.")
-        else:
-            print("[INFO] Gemini not available. Using fallback mapping.")
 
-        self.color_dict: Dict[str, Tuple[str, str]] = {
-            "red": ("Red", "#FF0000"), "blue": ("Blue", "#0000FF"), "green": ("Green", "#008000"),
-            "yellow": ("Yellow", "#FFFF00"), "orange": ("Orange", "#FFA500"), "purple": ("Purple", "#800080"),
-            "pink": ("Pink", "#FFC0CB"), "brown": ("Brown", "#A52A2A"), "black": ("Black", "#000000"),
-            "white": ("White", "#FFFFFF"), "grey": ("Grey", "#808080"), "gray": ("Grey", "#808080")
-        }
+        try:
+            genai.configure(api_key=self.api_key)
+            self.model = genai.GenerativeModel(
+                model_name=self.model_name,
+                generation_config={
+                    "temperature": 0.1, "top_p": 0.9, "top_k": 40,
+                    "response_mime_type": "text/plain"
+                },
+                safety_settings={
+                    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+                    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                },
+            )
+        except Exception as e:
+            raise RuntimeError(f"Gemini initialization failed: {e}")
 
     @lru_cache(maxsize=256)
     def map_color(self, color_name: str) -> Tuple[str, str]:
-        color_name = color_name.strip().lower()
-        if not color_name:
+        if not color_name.strip():
             return ("Unknown", "#808080")
-        for key, val in self.color_dict.items():
-            if key in color_name:
-                return val
-        if not self.model:
-            return ("Other", "#808080")
         try:
             prompt = f"""
             Standardize this color name into a JSON object:
-            - family: one of {list(set(v[0] for v in self.color_dict.values()))}
+            - family: color family
             - hex: approximate HEX code
             Color name: "{color_name}"
             Example: {{"family": "Blue", "hex": "#0000FF"}}
@@ -77,27 +65,12 @@ class ColorMapper:
             data = json.loads(text)
             return (data.get("family", "Other"), data.get("hex", "#808080"))
         except Exception as e:
-            print(f"[WARN] Gemini error: {e}")
-            return ("Other", "#808080")
-
-    @lru_cache(maxsize=256)
-    def map_season(self, description: str) -> str:
-        if not description.strip(): return "Unknown"
-        if not self.model: return "All-season"
-        try:
-            prompt = f"""Determine the season: Summer, Winter, Spring, Autumn. Respond with one word. Description: "{description}" """
-            response = self.model.generate_content(prompt)
-            return self._clean_response(response.text).strip().capitalize()
-        except Exception as e:
-            print(f"[WARN] Gemini error: {e}")
-            return "All-season"
+            raise RuntimeError(f"Gemini error during map_color: {e}")
 
     @lru_cache(maxsize=256)
     def map_all_tags(self, description: str) -> Dict[str, str]:
         if not description.strip():
             return {"color": "Unknown", "style": "Casual", "season": "All-season"}
-        if not self.model:
-            return {"color": "Other", "style": "Casual", "season": "All-season"}
         try:
             prompt = f"""
             Extract tags from this clothing description. Respond JSON: color, style, season
@@ -108,41 +81,48 @@ class ColorMapper:
             text = self._clean_response(response.text)
             return json.loads(text)
         except Exception as e:
-            print(f"[WARN] Gemini error: {e}")
-            return {"color": "Other", "style": "Casual", "season": "All-season"}
+            raise RuntimeError(f"Gemini error during map_all_tags: {e}")
 
     def _clean_response(self, text: str) -> str:
-        if not text: return "{}"
+        if not text:
+            return "{}"
         text = text.strip()
         if text.startswith("```"):
             text = re.sub(r"^```[a-zA-Z]*\n?", "", text)
             text = re.sub(r"\n?```$", "", text).strip()
         return text
 
-# Singleton
+# ==========================
+# Singleton for mapper
+# ==========================
 _color_mapper: Optional[ColorMapper] = None
-def initialize_color_mapper(api_key: Optional[str] = None):
+def initialize_color_mapper(api_key: str):
     global _color_mapper
     if _color_mapper is None:
         _color_mapper = ColorMapper(api_key=api_key)
 
 def map_color(color_name: str) -> Tuple[str, str]:
-    if _color_mapper is None: initialize_color_mapper()
+    if _color_mapper is None:
+        raise RuntimeError("ColorMapper not initialized")
     return _color_mapper.map_color(color_name)
 
 def map_all_tags(description: str) -> Dict[str, str]:
-    if _color_mapper is None: initialize_color_mapper()
+    if _color_mapper is None:
+        raise RuntimeError("ColorMapper not initialized")
     return _color_mapper.map_all_tags(description)
 
 # ==========================
 # Flask + MongoDB + Semantic Search
 # ==========================
 app = Flask(__name__)
-CORS(app) 
-initialize_color_mapper()
+CORS(app)
+
+# Initialize Gemini
+GEMINI_API_KEY = "AIzaSyAVrNVz8kvGDKTijqrGWio0HU9F6sQkaw8"  # <-- Replace this
+initialize_color_mapper(api_key=GEMINI_API_KEY)
 
 # MongoDB
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+MONGO_URI = "mongodb://localhost:27017"  # Directly without .env
 client = MongoClient(MONGO_URI)
 db = client["myntra_db"]
 products_collection = db["products"]
@@ -153,7 +133,9 @@ embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 def embed_text(text: str) -> np.ndarray:
     return embedding_model.encode([text])[0]
 
-# Endpoint: Map Colors
+# ==========================
+# Endpoints
+# ==========================
 @app.route("/map_colors", methods=["POST"])
 def map_colors_route():
     data = request.get_json()
@@ -166,7 +148,6 @@ def map_colors_route():
         results[color] = {"family": family, "hex": hex_code}
     return jsonify(results)
 
-# Endpoint: Map Tags
 @app.route("/map_tags", methods=["POST"])
 def map_tags_route():
     data = request.get_json()
@@ -176,7 +157,6 @@ def map_tags_route():
     tags = map_all_tags(description)
     return jsonify(tags)
 
-# Endpoint: Semantic Search
 @app.route("/semantic_search", methods=["POST"])
 def semantic_search():
     data = request.get_json()

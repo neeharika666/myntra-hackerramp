@@ -45,6 +45,29 @@ router.post("/trending", async (req, res) => {
   }
 });
 
+router.post("/colors", async (req, res) => {
+  try {
+    const { colors } = req.body;
+    if (!colors || !Array.isArray(colors)) {
+      return res.status(400).json({ error: "Please provide an array of colors" });
+    }
+
+    console.log("Received colors:", colors);
+
+    // Call your Flask ML service
+    const response = await axios.post("http://127.0.0.1:6010/map_colors", { colors });
+
+    console.log("Response from ML model:", response.data);
+
+    // Send the mapped colors back to frontend
+    return res.json(response.data);
+
+  } catch (error) {
+    console.error("Error mapping colors:", error.message);
+    res.status(500).json({ error: "Failed to map colors" });
+  }
+});
+
 // export default router;
 module.exports = router;
 

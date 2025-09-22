@@ -10,6 +10,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import AdminRoute from './components/auth/AdminRoute.jsx';
 
 // Pages
+import ColorMapper from "./pages/user/ColorMapper.jsx";
 import Home from './pages/Home.jsx';
 import Products from './pages/Products.jsx';
 import ProductDetail from './pages/ProductDetail.jsx';
@@ -52,7 +53,8 @@ function App() {
           <Route path="/search" element={<Search />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-
+          <Route path="/colourmap" element={<ColorMapper />} />
+          
           {/* Protected Routes */}
           <Route
             path="/profile"

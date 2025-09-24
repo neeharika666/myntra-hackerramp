@@ -8,7 +8,7 @@ import Header from './components/layout/Header.jsx';
 import Footer from './components/layout/Footer.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import AdminRoute from './components/auth/AdminRoute.jsx';
-
+import Recommendations from './pages/Recommendations.jsx';
 // Pages
 import ColorMapper from "./pages/user/ColorMapper.jsx";
 import Home from './pages/Home.jsx';
@@ -104,7 +104,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/festive"
+            element={
+              <ProtectedRoute>
+                <Recommendations />
+              </ProtectedRoute>
+            }
+          />
           {/* Admin Routes */}
           <Route
             path="/admin"

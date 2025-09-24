@@ -25,7 +25,7 @@ router.get('/', authenticateToken, async (req, res) => {
     const validItems = cart.items;
 
     cart.items = validItems;
-    console.log("cart", cart);
+    // console.log("cart", cart);
     await cart.save();
 
     res.json({ cart });

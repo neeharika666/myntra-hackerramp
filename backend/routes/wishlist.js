@@ -10,7 +10,7 @@ const router = express.Router();
 // @desc    Get user's wishlist
 router.get('/wish', async (req, res) => {
   try {
-    console.log(req);
+    // console.log(req);
     // console.log(" ia  djnf");
     const wishlist = await Wishlist.findOne({ user: req.query.userId })
       .populate({

@@ -1,0 +1,49 @@
+.recommendations-page {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .city-input {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .city-input input {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+  }
+  
+  .city-input button {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    background-color: #ff4081;
+    color: white;
+    border: none;
+    border-radius: 4px;
+  }
+  
+  .recommendation-section {
+    margin-bottom: 3rem;
+  }
+  
+  .recommendation-section h2 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .section-text {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+  
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  

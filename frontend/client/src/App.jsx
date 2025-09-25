@@ -17,6 +17,7 @@ import ProductDetail from './pages/ProductDetail.jsx';
 import Category from './pages/Category.jsx';
 import Search from './pages/Search.jsx';
 import Login from './pages/auth/Login.jsx';
+import VirtualTry from './pages/VirtualTry.jsx';
 import Register from './pages/auth/Register.jsx';
 import Profile from './pages/user/Profile.jsx';
 import Cart from './pages/user/Cart.jsx';
@@ -54,6 +55,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/colourmap" element={<ColorMapper />} />
+          <Route path="/virtualtry" element={<VirtualTry />} />
+
           
           {/* Protected Routes */}
           <Route
@@ -129,6 +132,7 @@ function App() {
               </AdminRoute>
             }
           />
+         
           <Route
             path="/admin/orders"
             element={

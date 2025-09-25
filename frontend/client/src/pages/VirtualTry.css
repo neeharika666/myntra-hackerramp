@@ -1,0 +1,52 @@
+.virtual-try.container {
+    padding: 40px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .vt-form {
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .vt-field {
+    margin-bottom: 15px;
+  }
+  
+  .vt-field label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+  }
+  
+  .vt-field input,
+  .vt-field select {
+    padding: 8px;
+    font-size: 14px;
+    width: 100%;
+  }
+  
+  .vt-submit {
+    padding: 10px 15px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .vt-submit:disabled {
+    background-color: #999;
+    cursor: not-allowed;
+  }
+  
+  .vt-result {
+    margin-top: 30px;
+  }
+  
+  .vt-image {
+    max-width: 400px;
+    border: 1px solid #ccc;
+    padding: 5px;
+  }
+  

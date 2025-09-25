@@ -1,3 +1,4 @@
+// src/components/ProductCard/ProductCard.jsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,6 +14,7 @@ const ProductCard = ({ product }) => {
   const { wishlist } = useSelector((state) => state.wishlist);
 
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
 
   // check if this product is in wishlist
   const isWishlisted = wishlist?.items?.some((item) => {
@@ -20,7 +22,7 @@ const ProductCard = ({ product }) => {
     return itemProductId === product?._id;
   }) || false;
 
-  // product images & price calculations (guard against missing fields)
+  // product images & price calculations
   const images = Array.isArray(product?.images) ? product.images : [];
   const primaryImage =
     images?.[0]?.url || (typeof images?.[0] === 'string' ? images[0] : '/placeholder-product.jpg');
@@ -70,6 +72,9 @@ const ProductCard = ({ product }) => {
       return;
     }
 
+    if (isTogglingWishlist) return;
+    setIsTogglingWishlist(true);
+
     try {
       const productId = String(product?._id || '');
       if (!productId) {
@@ -84,36 +89,32 @@ const ProductCard = ({ product }) => {
         toast.success('Added to wishlist');
       }
     } catch (error) {
-      const message = error?.message || error?.toString() || 'Failed to update wishlist';
-      // eslint-disable-next-line no-console
       console.error('Wishlist toggle failed:', error);
-      toast.error(message);
+      toast.error('Failed to update wishlist');
+    } finally {
+      setIsTogglingWishlist(false);
     }
   };
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-  
+
     if (!isAuthenticated) {
       toast.error('Please login to add to cart');
       return;
     }
-  
+
     if (isAddingToCart) return;
     setIsAddingToCart(true);
-  
+
     try {
-      // const availableVariant = variants[0]; // no stock check
-  
       await dispatch(
         addToCart({
           productId: product._id,
-          
           quantity: 1,
         })
       ).unwrap();
-      
       toast.success('Added to cart');
     } catch (error) {
       toast.error(error || 'Failed to add to cart');
@@ -121,8 +122,39 @@ const ProductCard = ({ product }) => {
       setIsAddingToCart(false);
     }
   };
-  
 
+  // Virtual Try-On handler
+  // Virtual Try-On handler
+  const handleVirtualTryOn = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  
+    try {
+      // Get existing array from localStorage
+      const stored = localStorage.getItem('virtualTryOnProducts');
+      let productsArray = stored ? JSON.parse(stored) : [];
+      localStorage.removeItem('virtualTryOnProduct');
+
+      // Ensure it's an array
+      if (!Array.isArray(productsArray)) productsArray = [productsArray];
+  
+      // Check for duplicates
+      const exists = productsArray.some(p => p._id === product._id);
+      if (!exists) {
+        productsArray.push(product); // add the new product
+        toast.success('Product added to Virtual Try-On!');
+      } else {
+        toast('Product already in Virtual Try-On');
+      }
+  
+      // Save back to localStorage
+      localStorage.setItem('virtualTryOnProducts', JSON.stringify(productsArray));
+    } catch (err) {
+      console.error('Failed to save Virtual Try-On product', err);
+      toast.error('Something went wrong');
+    }
+  };
+  
   // price formatter
   const formatPrice = (price) =>
     new Intl.NumberFormat('en-IN', {
@@ -143,27 +175,6 @@ const ProductCard = ({ product }) => {
           />
 
           {discount > 0 && <div className="discount-badge">{discount}% OFF</div>}
-
-          <div className="product-actions">
-            <button
-              className={`action-button wishlist-button ${
-                isWishlisted ? 'active' : ''
-              }`}
-              onClick={handleWishlistToggle}
-              title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-            >
-              <FiHeart />
-            </button>
-
-            <button
-              className="action-button cart-button"
-              onClick={handleAddToCart}
-              
-              title="Add to cart"
-            >
-              <FiShoppingBag />
-            </button>
-          </div>
         </div>
 
         <div className="product-info">
@@ -175,11 +186,7 @@ const ProductCard = ({ product }) => {
               {[...Array(5)].map((_, i) => (
                 <FiStar
                   key={i}
-                  className={`star ${
-                    i < Math.floor(Number(product?.rating?.average) || 0)
-                      ? 'filled'
-                      : ''
-                  }`}
+                  className={`star ${i < Math.floor(Number(product?.rating?.average) || 0) ? 'filled' : ''}`}
                 />
               ))}
             </div>
@@ -206,20 +213,42 @@ const ProductCard = ({ product }) => {
                 className="color-dot"
                 style={{
                   backgroundColor:
-                    (typeof variant?.color === 'string' && variant.color.toLowerCase()) ||
-                    '#ccc',
+                    (typeof variant?.color === 'string' && variant.color.toLowerCase()) || '#ccc',
                 }}
                 title={variant?.color || 'Color'}
               />
             ))}
-            {variants.length > 4 && (
-              <span className="more-colors">
-                +{variants.length - 4}
-              </span>
-            )}
+            {variants.length > 4 && <span className="more-colors">+{variants.length - 4}</span>}
           </div>
         </div>
       </Link>
+
+      {/* Buttons outside Link */}
+      <div className="product-actions">
+        <button
+          className={`action-button wishlist-button ${isWishlisted ? 'active' : ''}`}
+          onClick={handleWishlistToggle}
+          title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+        >
+          <FiHeart />
+        </button>
+
+        <button
+          className="action-button cart-button"
+          onClick={handleAddToCart}
+          title="Add to cart"
+        >
+          <FiShoppingBag />
+        </button>
+
+        <button
+          className="action-button tryon-button"
+          onClick={handleVirtualTryOn}
+          title="Virtual Try-On"
+        >
+          Try-On
+        </button>
+      </div>
     </div>
   );
 };

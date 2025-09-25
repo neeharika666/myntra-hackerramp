@@ -14,6 +14,76 @@
   padding: 6px;
   width: 150px; /* adjust as needed */
 }
+/* src/components/ProductCard/ProductCard.css */
+
+/* Buttons container */
+.product-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Common button styles */
+.action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  color: #fff;
+}
+
+/* Wishlist button */
+.wishlist-button {
+  background-color: #ff4081; /* pink */
+}
+
+.wishlist-button.active {
+  background-color: #c2185b; /* dark pink when active */
+}
+
+.wishlist-button:hover {
+  background-color: #e91e63;
+}
+
+/* Cart button */
+.cart-button {
+  background-color: #4caf50; /* green */
+}
+
+.cart-button:hover {
+  background-color: #388e3c;
+}
+
+/* Virtual Try-On button */
+.tryon-button {
+  background-color: #2196f3; /* blue */
+}
+
+.tryon-button:hover {
+  background-color: #1565c0;
+}
+
+/* Icon inside buttons */
+.action-button svg {
+  width: 18px;
+  height: 18px;
+  margin-right: 4px;
+}
+
+/* Optional: small shadow for buttons */
+.action-button {
+  box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Optional: smooth hover scale effect */
+.action-button:hover {
+  transform: scale(1.05);
+}
 
 .product-card:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
